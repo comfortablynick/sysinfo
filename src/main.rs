@@ -1,6 +1,8 @@
 use getopts::Options;
 mod example;
+mod load;
 mod logger;
+mod memory;
 
 #[derive(Debug)]
 struct Command {
@@ -17,8 +19,7 @@ impl Command {
     }
 }
 
-fn print_usage(program: &str, opts: Options, cmds: Vec<Command>) {
-    // let brief = format!("Usage: {} [options]", program);
+fn print_help(program: &str, opts: Options, cmds: Vec<Command>) {
     print!("Usage: {} [options] COMMAND", program);
     print!("{}", opts.usage(""));
     println!("");
@@ -28,16 +29,20 @@ fn print_usage(program: &str, opts: Options, cmds: Vec<Command>) {
     }
 }
 
-fn main() {
+fn main() -> Result<(), std::io::Error> {
     let args: Vec<String> = if std::env::args().len() > 1 {
         std::env::args().collect()
     } else {
-        vec!["sysinfo"].iter().map(|s| s.to_string()).collect()
+        vec!["sysinfo", "memory"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect()
     };
     let program = args[0].clone();
 
     // Define command line options
     let mut opts = Options::new();
+    opts.parsing_style(getopts::ParsingStyle::StopAtFirstFree);
     opts.optflag("h", "help", "print this help menu");
     opts.optflag("e", "example", "show example output of different commands");
     opts.optflagmulti("v", "verbose", "increase log verbosity (e.g., -vv/-vvv");
@@ -45,7 +50,8 @@ fn main() {
 
     let commands = vec![
         Command::new("memory", "output memory usage info"),
-        Command::new("cpu", "output cpu usage percent"),
+        Command::new("cpu", "output cpu usage info"),
+        Command::new("load", "output load average"),
         Command::new("temp", "output cpu temp"),
     ];
 
@@ -64,19 +70,37 @@ fn main() {
             _ => log::LevelFilter::Trace,
         });
     }
-    log::debug!("Args: {:#?}", args);
+    log::debug!("Main args: {:?}", args);
+    log::debug!("Remaining args: {:?}", matches.free);
 
     if matches.opt_present("h") {
-        print_usage(&program, opts, commands);
-        return;
+        print_help(&program, opts, commands);
+        return Ok(());
     }
 
-    log::debug!("Free: {:?}", matches.free);
     if matches.opt_present("e") {
         let measure_cpu = false;
         example::run_all(measure_cpu);
-        return;
+        return Ok(());
     }
 
-    print_usage(&program, opts, commands);
+    let cmd = if !matches.free.is_empty() {
+        matches.free[0].clone()
+    } else {
+        print_help(&program, opts, commands);
+        return Ok(());
+    };
+
+    log::debug!("Command: '{}'", cmd);
+
+    // Handle command
+    if cmd == "memory" {
+        memory::main(matches.free)?;
+        return Ok(());
+    }
+    if cmd == "load" {
+        load::main(matches.free)?;
+        return Ok(());
+    }
+    Ok(())
 }

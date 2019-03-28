@@ -1,4 +1,4 @@
-/* This module defines a super simple logger that works with the `log` crate.
+/* Defines a super simple logger that works with the `log` crate.
  * We don't need anything fancy; just basic log levels and the ability to
  * print to stderr. We therefore avoid bringing in extra dependencies just
  * for this functionality.

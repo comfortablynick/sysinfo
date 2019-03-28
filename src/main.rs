@@ -1,8 +1,18 @@
 use getopts::Options;
+use std::io::{Error, ErrorKind};
+mod cpu;
 mod example;
 mod load;
 mod logger;
 mod memory;
+mod temp;
+mod uptime;
+
+// Constants
+pub const PROG: &str = env!("CARGO_PKG_NAME");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
+const DESC: &str = env!("CARGO_PKG_DESCRIPTION");
 
 #[derive(Debug)]
 struct Command {
@@ -20,31 +30,31 @@ impl Command {
 }
 
 fn print_help(program: &str, opts: Options, cmds: Vec<Command>) {
+    println!("{} v{}", PROG, VERSION);
+    println!("{}", AUTHORS);
+    println!();
     print!("Usage: {} [options] COMMAND", program);
+    print!("\n\n{}", DESC);
     print!("{}", opts.usage(""));
-    println!("");
-    println!("Commands:");
+    println!("\nCommands:");
     for cmd in cmds {
         println!("    {:20}{}", cmd.name, cmd.help,);
     }
 }
 
-fn main() -> Result<(), std::io::Error> {
+fn main() -> Result<(), Box<std::error::Error>> {
     let args: Vec<String> = if std::env::args().len() > 1 {
         std::env::args().collect()
     } else {
-        vec!["sysinfo", "memory"]
-            .iter()
-            .map(|s| s.to_string())
-            .collect()
+        vec!["sysinfo"].iter().map(|s| s.to_string()).collect()
     };
     let program = args[0].clone();
 
     // Define command line options
     let mut opts = Options::new();
     opts.parsing_style(getopts::ParsingStyle::StopAtFirstFree);
-    opts.optflag("h", "help", "print this help menu");
-    opts.optflag("e", "example", "show example output of different commands");
+    opts.optflag("h", "help", "print help for program or command");
+    opts.optflag("V", "version", "print version and exit");
     opts.optflagmulti("v", "verbose", "increase log verbosity (e.g., -vv/-vvv");
     opts.optflag("q", "quiet", "discard log output (overrides --verbose");
 
@@ -53,6 +63,8 @@ fn main() -> Result<(), std::io::Error> {
         Command::new("cpu", "output cpu usage info"),
         Command::new("load", "output load average"),
         Command::new("temp", "output cpu temp"),
+        Command::new("uptime", "output system uptime"),
+        Command::new("example", "show example output of different commands"),
     ];
 
     let matches = match opts.parse(&args[1..]) {
@@ -78,14 +90,16 @@ fn main() -> Result<(), std::io::Error> {
         return Ok(());
     }
 
-    if matches.opt_present("e") {
-        let measure_cpu = false;
-        example::run_all(measure_cpu);
+    if matches.opt_present("V") {
+        println!("{} v{}", PROG, VERSION);
         return Ok(());
     }
 
     let cmd = if !matches.free.is_empty() {
-        matches.free[0].clone()
+        matches
+            .free
+            .get(0)
+            .ok_or_else(|| Error::new(ErrorKind::InvalidData, "error getting command"))?
     } else {
         print_help(&program, opts, commands);
         return Ok(());
@@ -94,13 +108,15 @@ fn main() -> Result<(), std::io::Error> {
     log::debug!("Command: '{}'", cmd);
 
     // Handle command
-    if cmd == "memory" {
-        memory::main(matches.free)?;
-        return Ok(());
+    match cmd.as_str() {
+        "m" | "memory" => memory::main(matches.free)?,
+        "l" | "load" => load::main(matches.free)?,
+        "c" | "cpu" => cpu::main(matches.free)?,
+        "t" | "temp" => temp::main(matches.free)?,
+        "u" | "uptime" => uptime::main(matches.free)?,
+        "e" | "example" => example::run_all(true),
+        _ => panic!("no command matches input"),
     }
-    if cmd == "load" {
-        load::main(matches.free)?;
-        return Ok(());
-    }
+
     Ok(())
 }

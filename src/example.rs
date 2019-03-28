@@ -3,7 +3,7 @@ use std::time::Duration;
 use systemstat::{Platform, System};
 
 pub fn run_all(measure_cpu: bool) {
-   let sys = System::new();
+    let sys = System::new();
 
     match sys.mounts() {
         Ok(mounts) => {
@@ -25,7 +25,7 @@ pub fn run_all(measure_cpu: bool) {
     match sys.block_device_statistics() {
         Ok(stats) => {
             for blkstats in stats.values() {
-                println!("{}: {:?}", blkstats.name, blkstats);
+                println!("{}: {:#?}", blkstats.name, blkstats);
             }
         }
         Err(x) => println!("\nBlock statistics error: {}", x.to_string()),
@@ -35,7 +35,7 @@ pub fn run_all(measure_cpu: bool) {
         Ok(netifs) => {
             println!("\nNetworks:");
             for netif in netifs.values() {
-                println!("{} ({:?})", netif.name, netif.addrs);
+                println!("{} ({:#?})", netif.name, netif.addrs);
             }
         }
         Err(x) => println!("\nNetworks: error: {}", x),
@@ -46,7 +46,7 @@ pub fn run_all(measure_cpu: bool) {
             println!("\nNetwork interface statistics:");
             for netif in netifs.values() {
                 println!(
-                    "{} statistics: ({:?})",
+                    "{} statistics: ({:#?})",
                     netif.name,
                     sys.network_stats(&netif.name)
                 );
@@ -62,8 +62,7 @@ pub fn run_all(measure_cpu: bool) {
             battery.remaining_time.as_secs() / 3600,
             battery.remaining_time.as_secs() % 60
         ),
-        // Err(x) => print!("\nBattery: error: {}", x),
-        Err(_) => return,
+        Err(x) => print!("\nBattery: error: {}", x),
     }
 
     match sys.on_ac_power() {
@@ -73,7 +72,7 @@ pub fn run_all(measure_cpu: bool) {
 
     match sys.memory() {
         Ok(mem) => println!(
-            "\nMemory: {} used / {} ({} bytes) total ({:?})",
+            "\nMemory: {} used / {} ({} bytes) total \n{:#?}",
             mem.total - mem.free,
             mem.total,
             mem.total.as_usize(),
@@ -91,7 +90,7 @@ pub fn run_all(measure_cpu: bool) {
     }
 
     match sys.uptime() {
-        Ok(uptime) => println!("\nUptime: {:?}", uptime),
+        Ok(uptime) => println!("\nUptime: {:#?}", uptime),
         Err(x) => println!("\nUptime: error: {}", x),
     }
 
@@ -125,7 +124,7 @@ pub fn run_all(measure_cpu: bool) {
     }
 
     match sys.socket_stats() {
-        Ok(stats) => println!("\nSystem socket statistics: {:?}", stats),
+        Ok(stats) => println!("\nSystem socket statistics: {:#?}", stats),
         Err(x) => println!("\nError: {}", x.to_string()),
     }
 }

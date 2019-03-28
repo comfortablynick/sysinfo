@@ -1,4 +1,4 @@
-/* Output system load info */
+/* Output cpu info */
 use getopts::Options;
 use systemstat::{Platform, System};
 
@@ -12,11 +12,10 @@ pub fn main(args: Vec<String>) -> Result<(), std::io::Error> {
 
     let mut opts = Options::new();
     opts.optflag("h", "help", "print this help menu");
-    opts.optopt(
-        "n",
-        "number",
-        "number of load averages to show (1-3)",
-        "NUMBER",
+    opts.optflag(
+        "c",
+        "celcius",
+        "show result in degrees celcius (not fahrenheit)",
     );
 
     let matches = match opts.parse(&args[1..]) {
@@ -30,18 +29,12 @@ pub fn main(args: Vec<String>) -> Result<(), std::io::Error> {
     }
 
     let sys = System::new();
-    let loadavg = sys.load_average()?;
+    let temp = sys.cpu_temp()?;
 
-    let num = matches.opt_str("n").unwrap_or_else(|| String::from("3"));
-
-    match num.as_str() {
-        "1" => println!("{:.2}", loadavg.one),
-        "2" => println!("{:.2} {:.2}", loadavg.one, loadavg.five),
-        "3" => println!(
-            "{:.2} {:.2} {:.2}",
-            loadavg.one, loadavg.five, loadavg.fifteen
-        ),
-        _ => panic!("invalid parameter for -n"),
+    if matches.opt_present("c") {
+        println!("{:.0}º", temp);
+    } else {
+        println!("{:.0}º", ((temp * 9.0) / 5.0 + 32.0));
     }
     Ok(())
 }

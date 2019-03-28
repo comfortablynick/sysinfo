@@ -4,10 +4,8 @@ use getopts::Options;
 use number_prefix::{NumberPrefix, Prefixed, Standalone};
 use systemstat::{ByteSize, Platform, System};
 
-static PROG: &str = "sysinfo";
-
-fn print_help(command: &String, opts: Options) {
-    let usage = format!("Usage: {} {} [options]", PROG, command);
+fn print_help(command: &str, opts: Options) {
+    let usage = format!("Usage: {} {} [options]", super::PROG, command);
     print!("{}", opts.usage(&usage));
 }
 

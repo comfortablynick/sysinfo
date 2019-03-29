@@ -12,3 +12,6 @@ getopts = "0.2"
 systemstat = "0.1"
 number_prefix = "0.3"
 chrono = "0.4"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+sys-info = "0.5"

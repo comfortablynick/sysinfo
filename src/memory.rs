@@ -1,7 +1,6 @@
 /* Output memory usage info */
 use getopts::Options;
 use number_prefix::{NumberPrefix, Prefixed, Standalone};
-use systemstat::{ByteSize, Platform, System};
 
 #[derive(Debug)]
 struct MemStats {
@@ -25,6 +24,8 @@ fn print_help(command: &str, opts: Options) {
 
 #[cfg(target_os = "linux")]
 fn get_memory() -> Result<MemStats, Box<std::error::Error>> {
+    use systemstat::{ByteSize, Platform, System};
+
     let sys = System::new();
     let mem = sys.memory()?;
     let meminfo = mem.platform_memory.meminfo;
@@ -78,13 +79,9 @@ fn get_memory() -> Result<MemStats, Box<std::error::Error>> {
 
 #[cfg(target_os = "macos")]
 fn get_memory() -> Result<MemStats, Box<std::error::Error>> {
-    // TODO: find way to implement this; another crate?
-    let sys = System::new();
-    let mem = sys.memory()?;
-    Ok(MemStats::new(
-        mem.total.as_usize(),
-        mem.total.as_usize() - mem.free.as_usize(),
-    ))
+    let mem_info = sys_info::mem_info()?;
+    log::debug!("{:#?}", mem_info);
+    Ok(MemStats::new(mem_info.total as usize, (mem_info.total - mem_info.free - mem_info.avail) as usize)) 
 }
 
 pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
@@ -110,7 +107,7 @@ pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
     let stats = get_memory()?;
 
     log::debug!(
-        "Used:         {} ({:.2}%)",
+        "Used: {} ({:.2}%)",
         stats.used,
         (stats.used as f32 / stats.total as f32) * 100.0
     );

@@ -81,7 +81,10 @@ fn get_memory() -> Result<MemStats, Box<std::error::Error>> {
 fn get_memory() -> Result<MemStats, Box<std::error::Error>> {
     let mem_info = sys_info::mem_info()?;
     log::debug!("{:#?}", mem_info);
-    Ok(MemStats::new(mem_info.total as usize, (mem_info.total - mem_info.free - mem_info.avail) as usize)) 
+    Ok(MemStats::new(
+        mem_info.total as usize,
+        (mem_info.total - mem_info.free - mem_info.avail) as usize,
+    ))
 }
 
 pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {

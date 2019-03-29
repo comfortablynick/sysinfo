@@ -1,6 +1,6 @@
 /* Output memory usage info */
 use getopts::Options;
-use number_prefix::{NumberPrefix, Prefixed, Standalone};
+use std::cmp;
 
 #[derive(Debug)]
 struct MemStats {
@@ -20,6 +20,32 @@ impl MemStats {
 fn print_help(command: &str, opts: Options) {
     let usage = format!("Usage: {} {} [options]", super::PROG, command);
     print!("{}", opts.usage(&usage));
+}
+
+/**
+ * Convert bytes into human-readable string format  
+ * `si_units`: use 1024 instead of 1000 bytes/kilobyte*/
+fn humanize_bytes(
+    num: f64,
+    si_units: bool,
+    display_byte_suffix: bool,
+) -> Result<String, Box<std::error::Error>> {
+    let negative = if num.is_sign_positive() { "" } else { "-" };
+    let num = num.abs();
+    let units = ["", "k", "M", "G", "T", "P", "E", "Z", "Y"];
+    let byte_suffix = if display_byte_suffix { "B" } else { "" };
+    if num < 1_f64 {
+        return Ok(format!("{}{}{}", negative, num, byte_suffix));
+    }
+    let delimiter = if si_units { 1024_f64 } else { 1000_f64 };
+    let exponent = cmp::min(
+        (num.ln() / delimiter.ln()).floor() as i32,
+        (units.len() - 1) as i32,
+    );
+    let pretty_bytes = format!("{:.2}", num / delimiter.powi(exponent)).parse::<f64>()? * 1_f64;
+    let unit = units[exponent as usize];
+    let out = format!("{}{:.2}{}{}", negative, pretty_bytes, unit, byte_suffix);
+    Ok(out)
 }
 
 #[cfg(target_os = "linux")]
@@ -82,8 +108,8 @@ fn get_memory() -> Result<MemStats, Box<std::error::Error>> {
     let mem_info = sys_info::mem_info()?;
     log::debug!("{:#?}", mem_info);
     Ok(MemStats::new(
-        mem_info.total as usize,
-        (mem_info.total - mem_info.free - mem_info.avail) as usize,
+        (mem_info.total * 1024) as usize,
+        ((mem_info.total - mem_info.free - mem_info.avail) * 1024) as usize,
     ))
 }
 
@@ -120,14 +146,8 @@ pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
         return Ok(());
     }
 
-    let used_fmt = match NumberPrefix::binary(stats.used as f32) {
-        Standalone(b) => format!("{}B", b),
-        Prefixed(prefix, n) => format!("{:.1}{}", n, prefix),
-    };
-    let total_fmt = match NumberPrefix::binary(stats.total as f32) {
-        Standalone(b) => format!("{}B", b),
-        Prefixed(prefix, n) => format!("{:.2}{}", n, prefix),
-    };
+    let used_fmt = humanize_bytes(stats.used as f64, true, false)?;
+    let total_fmt = humanize_bytes(stats.total as f64, true, false)?;
 
     println!("{}/{}", used_fmt, total_fmt);
 

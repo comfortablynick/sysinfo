@@ -1,6 +1,5 @@
 /* Output cpu info */
 use getopts::Options;
-use std::thread;
 
 fn print_help(command: &str, opts: Options) {
     let usage = format!("Usage: {} {} [options]", super::PROG, command);
@@ -10,6 +9,8 @@ fn print_help(command: &str, opts: Options) {
 #[cfg(target_os = "linux")]
 fn get_cpu() {
     use systemstat::{Duration, Platform, System};
+    use std::thread;
+
     let sys = System::new();
     match sys.cpu_load_aggregate() {
         Ok(cpu) => {
@@ -27,6 +28,12 @@ fn get_cpu() {
         }
         Err(x) => println!("\nCPU load: error: {}", x),
     }
+}
+
+#[cfg(target_os = "macos")]
+fn get_cpu() {
+    // use sys_info;
+    // sys_info::
 }
 
 pub fn main(args: Vec<String>) -> Result<(), std::io::Error> {

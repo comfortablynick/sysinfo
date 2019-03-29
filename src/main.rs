@@ -59,12 +59,12 @@ fn main() -> Result<(), Box<std::error::Error>> {
     opts.optflag("q", "quiet", "discard log output (overrides --verbose");
 
     let commands = vec![
-        Command::new("memory", "output memory usage info"),
-        Command::new("cpu", "output cpu usage info"),
-        Command::new("load", "output load average"),
-        Command::new("temp", "output cpu temp"),
-        Command::new("uptime", "output system uptime"),
-        Command::new("example", "show example output of different commands"),
+        Command::new("m, memory", "output memory usage info"),
+        Command::new("c, cpu", "output cpu usage info"),
+        Command::new("l, load", "output load average"),
+        Command::new("t, temp", "output cpu temp"),
+        Command::new("u, uptime", "output system uptime"),
+        Command::new("e, example", "show example output of different commands"),
     ];
 
     let matches = match opts.parse(&args[1..]) {

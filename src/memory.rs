@@ -5,12 +5,12 @@ use systemstat::{ByteSize, Platform, System};
 
 #[derive(Debug)]
 struct MemStats {
-    total: ByteSize,
-    used: ByteSize,
+    total: usize,
+    used: usize,
 }
 
 impl MemStats {
-    fn new(total: ByteSize, used: ByteSize) -> MemStats {
+    fn new(total: usize, used: usize) -> MemStats {
         MemStats {
             total: total,
             used: used,
@@ -73,18 +73,21 @@ fn get_memory() -> Result<MemStats, Box<std::error::Error>> {
         shmem / 1024,
         s_reclaimable / 1024
     );
-    MemStats::new(mem_used, mem_total)
+    Ok(MemStats::new(mem_total, mem_used))
 }
 
 #[cfg(target_os = "macos")]
-fn get_memory() -> MemStats {
+fn get_memory() -> Result<MemStats, Box<std::error::Error>> {
     // TODO: find way to implement this; another crate?
     let sys = System::new();
-    let mem = sys.memory().expect("failed to get memory");
-    MemStats::new(mem.total, mem.total - mem.free)
+    let mem = sys.memory()?;
+    Ok(MemStats::new(
+        mem.total.as_usize(),
+        mem.total.as_usize() - mem.free.as_usize(),
+    ))
 }
 
-pub fn main(args: Vec<String>) -> Result<(), std::io::Error> {
+pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
     log::debug!("Args: {:?}", args);
 
     let mut opts = Options::new();
@@ -104,26 +107,26 @@ pub fn main(args: Vec<String>) -> Result<(), std::io::Error> {
     let used_pct = matches.opt_present("p");
     log::debug!("Opt: Used mem as pct: {}", used_pct);
 
-    let stats = get_memory();
+    let stats = get_memory()?;
 
     log::debug!(
         "Used:         {} ({:.2}%)",
         stats.used,
-        (stats.used.as_usize() as f32 / stats.total.as_usize() as f32) * 100.0
+        (stats.used as f32 / stats.total as f32) * 100.0
     );
 
     if used_pct {
-        println!("{:.1}%", (stats.used.as_usize() as f32 / stats.total.as_usize() as f32) * 100.0);
+        println!("{:.1}%", (stats.used as f32 / stats.total as f32) * 100.0);
         return Ok(());
     }
 
-    let used_fmt = match NumberPrefix::binary(stats.used.as_usize() as f32) {
-        Standalone(b) => format!("{} B", b),
-        Prefixed(prefix, n) => format!("{:.1} {}B", n, prefix),
+    let used_fmt = match NumberPrefix::binary(stats.used as f32) {
+        Standalone(b) => format!("{}B", b),
+        Prefixed(prefix, n) => format!("{:.1}{}", n, prefix),
     };
-    let total_fmt = match NumberPrefix::binary(stats.total.as_usize() as f32) {
-        Standalone(b) => format!("{} B", b),
-        Prefixed(prefix, n) => format!("{:.2} {}B", n, prefix),
+    let total_fmt = match NumberPrefix::binary(stats.total as f32) {
+        Standalone(b) => format!("{}B", b),
+        Prefixed(prefix, n) => format!("{:.2}{}", n, prefix),
     };
 
     println!("{}/{}", used_fmt, total_fmt);

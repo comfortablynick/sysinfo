@@ -7,9 +7,9 @@ fn print_help(command: &str, opts: Options) {
 }
 
 #[cfg(target_os = "linux")]
-fn get_cpu() {
-    use systemstat::{Duration, Platform, System};
+fn cpu_test() {
     use std::thread;
+    use systemstat::{Duration, Platform, System};
 
     let sys = System::new();
     match sys.cpu_load_aggregate() {
@@ -30,18 +30,49 @@ fn get_cpu() {
     }
 }
 
+#[cfg(target_os = "linux")]
+fn get_cpu(interval: Option<u64>) {
+    use std::thread;
+    use systemstat::{Duration, Platform, System};
+
+    let sys = System::new();
+    match sys.cpu_load_aggregate() {
+        Ok(cpu) => {
+            thread::sleep(Duration::from_secs(interval.unwrap_or(1)));
+            let cpu = cpu.done().unwrap();
+            println!(
+                "{:.1}%",
+                (cpu.user + cpu.nice + cpu.system + cpu.interrupt) * 100_f32
+            );
+        }
+        Err(x) => println!("\nCPU load: error: {}", x),
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn cpu_test() {
+    // use sys_info;
+    // sys_info::
+}
+
 #[cfg(target_os = "macos")]
 fn get_cpu() {
     // use sys_info;
     // sys_info::
 }
 
-pub fn main(args: Vec<String>) -> Result<(), std::io::Error> {
+pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
     log::debug!("Args: {:?}", args);
 
     let mut opts = Options::new();
     opts.optflag("h", "help", "print this help menu");
     opts.optflag("t", "test", "test cpu load aggregate and print results");
+    opts.optopt(
+        "i",
+        "interval",
+        "interval length for sampling cpu (in seconds)",
+        "SECS",
+    );
 
     let matches = match opts.parse(&args[1..]) {
         Ok(m) => m,
@@ -54,7 +85,14 @@ pub fn main(args: Vec<String>) -> Result<(), std::io::Error> {
     }
 
     if matches.opt_present("t") {
-        get_cpu();
+        cpu_test();
     }
+
+    let interval: u64 = matches
+        .opt_get("i")
+        .unwrap_or_else(|_| Some(String::from("1")))
+        .ok_or("`interval` must be an integer")?
+        .parse()?;
+    get_cpu(Some(interval));
     Ok(())
 }

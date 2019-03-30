@@ -24,7 +24,8 @@ fn print_help(command: &str, opts: Options) {
 
 /**
  * Convert bytes into human-readable string format  
- * `si_units`: use 1024 instead of 1000 bytes/kilobyte*/
+ * `si_units`: use 1024 instead of 1000 bytes/kilobyte
+ * `display_byte_suffix`: show 'B' after unit (e.g., 'MB' vs 'M')*/
 fn humanize_bytes(
     num: f64,
     si_units: bool,

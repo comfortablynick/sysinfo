@@ -29,17 +29,27 @@ pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
     let uptime = sys.uptime()?;
     let duration = chrono::Duration::from_std(uptime)?;
     let mut out = String::new();
+    // push days
     if duration.num_days() > 0 {
         out.push_str(&duration.num_days().to_string());
-        out.push_str(&"d");
+        out.push('d');
     }
+    // push hours
     let hours = duration
         .sub(chrono::Duration::days(duration.num_days()))
         .num_hours();
-    if hours > 0 {
-        out.push_str(&hours.to_string());
-        out.push_str(&"h");
+    out.push_str(&hours.to_string());
+    out.push('h');
+    // push minutes if < 1 hour
+    if hours < 1 {
+        let minutes = duration
+            .sub(chrono::Duration::hours(duration.num_hours()))
+            .num_minutes();
+        out.push_str(&minutes.to_string());
+        out.push('m');
     }
-    println!("↑{}", out);
+    if out != "" {
+        println!("↑{}", out);
+    }
     Ok(())
 }

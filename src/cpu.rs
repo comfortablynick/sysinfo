@@ -88,11 +88,7 @@ pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
         cpu_test();
     }
 
-    let interval: u64 = matches
-        .opt_get("i")
-        .unwrap_or_else(|_| Some(String::from("1")))
-        .ok_or("`interval` must be an integer")?
-        .parse()?;
-    get_cpu(Some(interval));
+    let interval: Option<u64> = matches.opt_get("i")?;
+    get_cpu(interval);
     Ok(())
 }

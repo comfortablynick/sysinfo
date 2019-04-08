@@ -28,28 +28,30 @@ pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
     let sys = System::new();
     let uptime = sys.uptime()?;
     let duration = chrono::Duration::from_std(uptime)?;
-    let mut out = String::new();
+    // push weeks
+    if duration.num_weeks() > 0 {
+        print!("{}w", duration.num_weeks());
+    }
     // push days
-    if duration.num_days() > 0 {
-        out.push_str(&duration.num_days().to_string());
-        out.push('d');
+    let days = duration
+        .sub(chrono::Duration::weeks(duration.num_weeks()))
+        .num_days();
+    if days > 0 {
+        print!("{}d", days);
     }
     // push hours
     let hours = duration
         .sub(chrono::Duration::days(duration.num_days()))
         .num_hours();
-    out.push_str(&hours.to_string());
-    out.push('h');
+    if hours > 0 {
+        print!("{}h", hours);
+    }
     // push minutes if < 1 hour
-    if hours < 1 {
+    if duration.num_hours() < 1 {
         let minutes = duration
             .sub(chrono::Duration::hours(duration.num_hours()))
             .num_minutes();
-        out.push_str(&minutes.to_string());
-        out.push('m');
-    }
-    if out != "" {
-        println!("↑{}", out);
+        print!("{}m", minutes);
     }
     Ok(())
 }

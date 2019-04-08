@@ -1,7 +1,10 @@
 /* Output system uptime */
 // use chrono::format;
 use getopts::Options;
-use std::ops::Sub;
+use std::{
+    io::{self, Write},
+    ops::Sub,
+};
 use systemstat::{Platform, System};
 
 fn print_help(command: &str, opts: Options) {
@@ -28,30 +31,32 @@ pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
     let sys = System::new();
     let uptime = sys.uptime()?;
     let duration = chrono::Duration::from_std(uptime)?;
+    let stdout = io::stdout();
+    let mut cout = stdout.lock();
     // push weeks
     if duration.num_weeks() > 0 {
-        print!("{}w", duration.num_weeks());
+        write!(cout, "{}w", duration.num_weeks())?;
     }
     // push days
     let days = duration
         .sub(chrono::Duration::weeks(duration.num_weeks()))
         .num_days();
     if days > 0 {
-        print!("{}d", days);
+        write!(cout, "{}d", days)?;
     }
     // push hours
     let hours = duration
         .sub(chrono::Duration::days(duration.num_days()))
         .num_hours();
     if hours > 0 {
-        print!("{}h", hours);
+        write!(cout, "{}h", hours)?;
     }
     // push minutes if < 1 hour
     if duration.num_hours() < 1 {
         let minutes = duration
             .sub(chrono::Duration::hours(duration.num_hours()))
             .num_minutes();
-        print!("{}m", minutes);
+        write!(cout, "{}m", minutes)?;
     }
     Ok(())
 }

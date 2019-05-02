@@ -1,5 +1,4 @@
 /* Output system uptime */
-// use chrono::format;
 use getopts::Options;
 use std::{
     io::{self, Write},
@@ -54,11 +53,11 @@ pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
     if days > 0 {
         write!(cout, "{}d", days)?;
     }
-    // push hours if < 1 week
+    // push hours if -p and < 1 week
     let hours = duration
         .sub(chrono::Duration::days(duration.num_days()))
         .num_hours();
-    if hours > 0 && (duration.num_weeks() == 0 || matches.opt_present("precise")) {
+    if hours > 0 && (duration.num_weeks() == 0 && matches.opt_present("precise")) {
         write!(cout, "{}h", hours)?;
     }
     // push minutes if < 1 hour

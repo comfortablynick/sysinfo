@@ -56,7 +56,8 @@ fn cpu_test() {
 }
 
 #[cfg(target_os = "macos")]
-fn get_cpu() {
+fn get_cpu(interval: Option<u64>) {
+    let _ = interval;
     // use sys_info;
     // sys_info::
 }

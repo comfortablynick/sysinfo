@@ -1,5 +1,6 @@
 /* Output cpu info */
 use getopts::Options;
+use std::io::{self, Write};
 use systemstat::{Platform, System};
 
 fn print_help(command: &str, opts: Options) {
@@ -7,7 +8,7 @@ fn print_help(command: &str, opts: Options) {
     print!("{}", opts.usage(&usage));
 }
 
-pub fn main(args: Vec<String>) -> Result<(), std::io::Error> {
+pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
     log::debug!("Args: {:?}", args);
 
     let mut opts = Options::new();
@@ -18,10 +19,7 @@ pub fn main(args: Vec<String>) -> Result<(), std::io::Error> {
         "show result in degrees celcius (not fahrenheit)",
     );
 
-    let matches = match opts.parse(&args[1..]) {
-        Ok(m) => m,
-        Err(f) => panic!(f.to_string()),
-    };
+    let matches = opts.parse(&args[1..])?;
 
     if matches.opt_present("h") {
         print_help(&args[0], opts);
@@ -31,10 +29,13 @@ pub fn main(args: Vec<String>) -> Result<(), std::io::Error> {
     let sys = System::new();
     let temp = sys.cpu_temp()?;
 
+    let stdout = io::stdout();
+    let mut cout = stdout.lock();
+
     if matches.opt_present("c") {
-        println!("{:.0}º", temp);
+        write!(cout, "{:.0}º", temp)?;
     } else {
-        println!("{:.0}º", ((temp * 9.0) / 5.0 + 32.0));
+        write!(cout, "{:.0}º", ((temp * 9.0) / 5.0 + 32.0))?;
     }
     Ok(())
 }

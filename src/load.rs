@@ -1,5 +1,7 @@
 /* Output system load info */
 use getopts::Options;
+use log::debug;
+use std::io::{Error, ErrorKind};
 use systemstat::{Platform, System};
 
 fn print_help(command: &str, opts: Options) {
@@ -7,8 +9,8 @@ fn print_help(command: &str, opts: Options) {
     print!("{}", opts.usage(&usage));
 }
 
-pub fn main(args: Vec<String>) -> Result<(), std::io::Error> {
-    log::debug!("Args: {:?}", args);
+pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
+    debug!("Args: {:?}", args);
 
     let mut opts = Options::new();
     opts.optflag("h", "help", "print this help menu");
@@ -19,10 +21,7 @@ pub fn main(args: Vec<String>) -> Result<(), std::io::Error> {
         "NUMBER",
     );
 
-    let matches = match opts.parse(&args[1..]) {
-        Ok(m) => m,
-        Err(f) => panic!(f.to_string()),
-    };
+    let matches = opts.parse(&args[1..])?;
 
     if matches.opt_present("h") {
         print_help(&args[0], opts);
@@ -41,7 +40,12 @@ pub fn main(args: Vec<String>) -> Result<(), std::io::Error> {
             "{:.2} {:.2} {:.2}",
             loadavg.one, loadavg.five, loadavg.fifteen
         ),
-        _ => panic!("invalid parameter for -n"),
+        _ => {
+            Err(Box::new(Error::new(
+                ErrorKind::InvalidInput,
+                format!("no command matches `{}`", num),
+            )))?;
+        }
     }
     Ok(())
 }

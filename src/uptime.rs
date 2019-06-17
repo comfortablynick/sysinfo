@@ -18,13 +18,13 @@ pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
     let mut opts = Options::new();
     opts.optflag("h", "help", "print this help menu");
     opts.optflag("w", "weeks", "format as weeks instead of days");
-    opts.optflag("p", "precise", "show hours or minutes (if < 1 hour)");
+    opts.optflag(
+        "p",
+        "precise",
+        "show hours (if < 1 week) or minutes (if < 1 day)",
+    );
 
-    let matches = match opts.parse(&args[1..]) {
-        Ok(m) => m,
-        Err(f) => panic!(f.to_string()),
-    };
-
+    let matches = opts.parse(&args[1..])?;
     if matches.opt_present("h") {
         print_help(&args[0], opts);
         return Ok(());
@@ -53,15 +53,15 @@ pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
     if days > 0 {
         write!(cout, "{}d", days)?;
     }
-    // push hours if -p and < 1 week
     let hours = duration
         .sub(chrono::Duration::days(duration.num_days()))
         .num_hours();
-    if hours > 0 && (duration.num_weeks() == 0 && matches.opt_present("precise")) {
+    // push hours if < 1 day OR if --precise < 1 week
+    if days < 1 || (duration.num_weeks() == 0 && matches.opt_present("precise")) {
         write!(cout, "{}h", hours)?;
     }
-    // push minutes if < 1 hour
-    if duration.num_hours() < 1 {
+    // push minutes if < 1 hour OR if --precise and < 1 day
+    if hours < 1 || (days == 0 && matches.opt_present("precise")) {
         let minutes = duration
             .sub(chrono::Duration::hours(duration.num_hours()))
             .num_minutes();

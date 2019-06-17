@@ -1,4 +1,5 @@
 use getopts::Options;
+use log::debug;
 use std::io::{Error, ErrorKind};
 mod cpu;
 mod example;
@@ -55,7 +56,7 @@ fn main() -> Result<(), Box<std::error::Error>> {
     opts.parsing_style(getopts::ParsingStyle::StopAtFirstFree);
     opts.optflag("h", "help", "print help for program or command");
     opts.optflag("V", "version", "print version and exit");
-    opts.optflagmulti("v", "verbose", "increase log verbosity (e.g., -vv/-vvv");
+    opts.optflagmulti("v", "verbose", "increase log verbosity (e.g., -vv/-vvv)");
     opts.optflag("q", "quiet", "discard log output (overrides --verbose");
 
     let commands = vec![
@@ -67,10 +68,7 @@ fn main() -> Result<(), Box<std::error::Error>> {
         Command::new("e, example", "show example output of different commands"),
     ];
 
-    let matches = match opts.parse(&args[1..]) {
-        Ok(m) => m,
-        Err(f) => panic!(f.to_string()),
-    };
+    let matches = opts.parse(&args[1..])?;
 
     if !matches.opt_present("q") {
         // init logger
@@ -82,8 +80,8 @@ fn main() -> Result<(), Box<std::error::Error>> {
             _ => log::LevelFilter::Trace,
         });
     }
-    log::debug!("Main args: {:?}", args);
-    log::debug!("Remaining args: {:?}", matches.free);
+    debug!("Main args: {:?}", args);
+    debug!("Remaining args: {:?}", matches.free);
 
     if matches.opt_present("h") {
         print_help(&program, opts, commands);
@@ -105,7 +103,7 @@ fn main() -> Result<(), Box<std::error::Error>> {
         return Ok(());
     };
 
-    log::debug!("Command: '{}'", cmd);
+    debug!("Command: '{}'", cmd);
 
     // Handle command
     match cmd.as_str() {
@@ -115,8 +113,12 @@ fn main() -> Result<(), Box<std::error::Error>> {
         "t" | "temp" => temp::main(matches.free)?,
         "u" | "uptime" => uptime::main(matches.free)?,
         "e" | "example" => example::run_all(true),
-        _ => panic!("no command matches input"),
+        _ => {
+            Err(Box::new(Error::new(
+                ErrorKind::InvalidInput,
+                format!("no command matches `{}`", cmd.as_str()),
+            )))?;
+        }
     }
-
     Ok(())
 }

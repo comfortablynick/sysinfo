@@ -1,5 +1,6 @@
 /* Output memory usage info */
 use getopts::Options;
+use log::{debug, trace};
 use std::cmp;
 
 #[derive(Debug)]
@@ -10,10 +11,7 @@ struct MemStats {
 
 impl MemStats {
     fn new(total: usize, used: usize) -> MemStats {
-        MemStats {
-            total: total,
-            used: used,
-        }
+        MemStats { total, used }
     }
 }
 
@@ -85,8 +83,8 @@ fn get_memory() -> Result<MemStats, Box<std::error::Error>> {
 
     let mem_used = mem_total - mem_free + shmem - buffers - cached - s_reclaimable;
 
-    log::trace!("{:#?}", System::new().memory()?.platform_memory.meminfo);
-    log::debug!(
+    trace!("{:#?}", System::new().memory()?.platform_memory.meminfo);
+    debug!(
         "Memory details:
         MemTotal:     {}
         MemFree:      {}
@@ -107,7 +105,7 @@ fn get_memory() -> Result<MemStats, Box<std::error::Error>> {
 #[cfg(target_os = "macos")]
 fn get_memory() -> Result<MemStats, Box<std::error::Error>> {
     let mem_info = sys_info::mem_info()?;
-    log::debug!("{:#?}", mem_info);
+    debug!("{:#?}", mem_info);
     Ok(MemStats::new(
         (mem_info.total * 1024) as usize,
         ((mem_info.total - mem_info.free - mem_info.avail) * 1024) as usize,
@@ -115,16 +113,13 @@ fn get_memory() -> Result<MemStats, Box<std::error::Error>> {
 }
 
 pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
-    log::debug!("Args: {:?}", args);
+    debug!("Args: {:?}", args);
 
     let mut opts = Options::new();
     opts.optflag("h", "help", "print this help menu");
     opts.optflag("p", "percent", "used mem as pct of total mem");
 
-    let matches = match opts.parse(&args[1..]) {
-        Ok(m) => m,
-        Err(f) => panic!(f.to_string()),
-    };
+    let matches = opts.parse(&args[1..])?;
 
     if matches.opt_present("h") {
         print_help(&args[0], opts);
@@ -132,11 +127,11 @@ pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
     }
 
     let used_pct = matches.opt_present("p");
-    log::debug!("Opt: Used mem as pct: {}", used_pct);
+    debug!("Opt: Used mem as pct: {}", used_pct);
 
     let stats = get_memory()?;
 
-    log::debug!(
+    debug!(
         "Used: {} ({:.2}%)",
         stats.used,
         (stats.used as f32 / stats.total as f32) * 100.0

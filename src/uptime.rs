@@ -57,11 +57,11 @@ pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
         .sub(chrono::Duration::days(duration.num_days()))
         .num_hours();
     // push hours if < 1 day OR if --precise < 1 week
-    if days < 1 || (duration.num_weeks() == 0 && matches.opt_present("precise")) {
+    if duration.num_days() < 1 || (duration.num_weeks() == 0 && matches.opt_present("precise")) {
         write!(cout, "{}h", hours)?;
     }
     // push minutes if < 1 hour OR if --precise and < 1 day
-    if hours < 1 || (days == 0 && matches.opt_present("precise")) {
+    if duration.num_days() < 1 || (duration.num_days() == 0 && matches.opt_present("precise")) {
         let minutes = duration
             .sub(chrono::Duration::hours(duration.num_hours()))
             .num_minutes();

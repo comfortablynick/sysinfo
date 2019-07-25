@@ -9,7 +9,7 @@ fn print_help(command: &str, opts: Options) {
     print!("{}", opts.usage(&usage));
 }
 
-pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
+pub fn main(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     debug!("Args: {:?}", args);
 
     let mut opts = Options::new();
@@ -41,10 +41,10 @@ pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
             loadavg.one, loadavg.five, loadavg.fifteen
         ),
         _ => {
-            Err(Box::new(Error::new(
+            return Err(Box::new(Error::new(
                 ErrorKind::InvalidInput,
                 format!("no command matches `{}`", num),
-            )))?;
+            )));
         }
     }
     Ok(())

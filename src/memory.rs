@@ -3,6 +3,8 @@ use getopts::Options;
 use log::{debug, trace};
 use std::cmp;
 
+type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
+
 #[derive(Debug)]
 struct MemStats {
     total: usize,
@@ -24,11 +26,7 @@ fn print_help(command: &str, opts: Options) {
  * Convert bytes into human-readable string format  
  * `si_units`: use 1024 instead of 1000 bytes/kilobyte
  * `display_byte_suffix`: show 'B' after unit (e.g., 'MB' vs 'M')*/
-fn humanize_bytes(
-    num: f64,
-    si_units: bool,
-    display_byte_suffix: bool,
-) -> Result<String, Box<std::error::Error>> {
+fn humanize_bytes(num: f64, si_units: bool, display_byte_suffix: bool) -> Result<String> {
     let negative = if num.is_sign_positive() { "" } else { "-" };
     let num = num.abs();
     let units = ["", "k", "M", "G", "T", "P", "E", "Z", "Y"];
@@ -48,7 +46,7 @@ fn humanize_bytes(
 }
 
 #[cfg(target_os = "linux")]
-fn get_memory() -> Result<MemStats, Box<std::error::Error>> {
+fn get_memory() -> Result<MemStats> {
     use systemstat::{ByteSize, Platform, System};
 
     let sys = System::new();
@@ -112,7 +110,7 @@ fn get_memory() -> Result<MemStats, Box<std::error::Error>> {
     ))
 }
 
-pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
+pub fn main(args: &[String]) -> Result {
     debug!("Args: {:?}", args);
 
     let mut opts = Options::new();

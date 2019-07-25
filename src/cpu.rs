@@ -62,7 +62,7 @@ fn get_cpu(interval: Option<u64>) {
     // sys_info::
 }
 
-pub fn main(args: Vec<String>) -> Result<(), Box<std::error::Error>> {
+pub fn main(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     log::debug!("Args: {:?}", args);
 
     let mut opts = Options::new();

@@ -9,6 +9,8 @@ mod memory;
 mod temp;
 mod uptime;
 
+type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
+
 // Constants
 pub const PROG: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -43,7 +45,7 @@ fn print_help(program: &str, opts: Options, cmds: Vec<Command>) {
     }
 }
 
-fn main() -> Result<(), Box<std::error::Error>> {
+fn main() -> Result {
     let args: Vec<String> = if std::env::args().len() > 1 {
         std::env::args().collect()
     } else {
@@ -107,17 +109,17 @@ fn main() -> Result<(), Box<std::error::Error>> {
 
     // Handle command
     match cmd.as_str() {
-        "m" | "memory" => memory::main(matches.free)?,
-        "l" | "load" => load::main(matches.free)?,
-        "c" | "cpu" => cpu::main(matches.free)?,
-        "t" | "temp" => temp::main(matches.free)?,
-        "u" | "uptime" => uptime::main(matches.free)?,
+        "m" | "memory" => memory::main(&matches.free)?,
+        "l" | "load" => load::main(&matches.free)?,
+        "c" | "cpu" => cpu::main(&matches.free)?,
+        "t" | "temp" => temp::main(&matches.free)?,
+        "u" | "uptime" => uptime::main(&matches.free)?,
         "e" | "example" => example::run_all(true),
         _ => {
-            Err(Box::new(Error::new(
+            return Err(Box::new(Error::new(
                 ErrorKind::InvalidInput,
                 format!("no command matches `{}`", cmd.as_str()),
-            )))?;
+            )));
         }
     }
     Ok(())

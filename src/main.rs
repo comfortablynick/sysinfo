@@ -75,13 +75,15 @@ fn main() -> Result {
 
     if !matches.opt_present("q") {
         // init logger
-        logger::Logger::init().expect("error initializing logger");
-        log::set_max_level(match matches.opt_count("v") {
-            0 => log::LevelFilter::Warn,
-            1 => log::LevelFilter::Info,
-            2 => log::LevelFilter::Debug,
-            _ => log::LevelFilter::Trace,
-        });
+        // logger::Logger::init().expect("error initializing logger");
+        // env_logger::init();
+        logger::init_env_logger(matches.opt_count("v") as u8);
+        // log::set_max_level(match matches.opt_count("v") {
+        //     0 => log::LevelFilter::Warn,
+        //     1 => log::LevelFilter::Info,
+        //     2 => log::LevelFilter::Debug,
+        //     _ => log::LevelFilter::Trace,
+        // });
     }
     debug!("Main args: {:?}", args);
     debug!("Remaining args: {:?}", matches.free);

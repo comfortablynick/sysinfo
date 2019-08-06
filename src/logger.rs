@@ -7,6 +7,7 @@
  * https://github.com/BurntSushi/ripgrep/blob/master/src/logger.rs */
 
 use log::{self, Log};
+use std::path::Path;
 
 /// The simplest possible logger that logs to stderr.
 ///
@@ -34,7 +35,15 @@ impl Log for Logger {
     }
 
     fn log(&self, record: &log::Record) {
-        match (record.file(), record.line()) {
+        match (
+            record
+                .file()
+                .map(|s| Path::new(s).file_name())
+                .flatten()
+                .map(|s| s.to_str())
+                .flatten(),
+            record.line(),
+        ) {
             (Some(file), Some(line)) => {
                 eprintln!(
                     "{}|{}|{}:{}: {}",

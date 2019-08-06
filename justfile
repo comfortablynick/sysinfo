@@ -1,53 +1,38 @@
 #!/usr/bin/env just --justfile
+bin_name := 'sysinfo'
+dev := '1'
+
 alias r := run
-alias rr := run-release
 alias b := build
-alias br := build-release
 alias i := install
 alias h := help
-alias q := runq
 
-# build debug binary and copy to ~/bin
+# build release binary
 build:
-	cargo build
+    cargo build --release
 
-# build release binary and copy to ~/bin
-build-release:
-	cargo build --release
-
-# build release binary and install to cargo bin dir
+# build release binary ONLY during dev; otherwise install
 install:
-	cargo install --path . -f
-
-# build debug binary and run
-run:
-	cargo run
+    #!/usr/bin/env bash
+    if [[ {{dev}} -eq "1" ]]; then
+        cargo run --release -- m
+    else
+        cargo install -f
+    fi #
 
 # build release binary and run
-run-release:
-	cargo run --release
-
-# run with --quiet
-runq:
-	./target/release/sysinfo -q
+run:
+    cargo run --release -- m
 
 help:
-	./target/release/sysinfo -h
-
-# run with verbosity (INFO)
-runv:
-	RUST_LOG=info cargo run
-
-# run with verbosity (DEBUG)
-runvv:
-	RUST_LOG=debug cargo run
+    ./target/release/{{bin_name}} -h
 
 # run release binary
-sysinfo args='':
-	./target/release/sysinfo {{args}}
+rb +args='':
+    ./target/release/{{bin_name}} {{args}}
 
 test:
-	cargo test
+    cargo test
 
 fix:
-	cargo fix
+    cargo fix

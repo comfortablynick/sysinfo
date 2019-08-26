@@ -1,4 +1,3 @@
-#![feature(option_flattening)]
 use getopts::Options;
 use log::debug;
 use std::io::{Error, ErrorKind};

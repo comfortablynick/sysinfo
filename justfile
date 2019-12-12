@@ -1,6 +1,6 @@
 #!/usr/bin/env just --justfile
 bin_name := 'sysinfo'
-dev := '1'
+dev := '0'
 
 alias r := run
 alias b := build
@@ -17,7 +17,7 @@ install:
     if [[ {{dev}} -eq "1" ]]; then
         cargo run --release -- m
     else
-        cargo install -f
+        cargo install --path . -f
     fi #
 
 # build release binary and run

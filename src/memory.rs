@@ -8,7 +8,7 @@ type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 #[derive(Debug)]
 struct MemStats {
     total: usize,
-    used: usize,
+    used:  usize,
 }
 
 impl MemStats {
@@ -22,10 +22,10 @@ fn print_help(command: &str, opts: Options) {
     print!("{}", opts.usage(&usage));
 }
 
-/**
- * Convert bytes into human-readable string format  
- * `si_units`: use 1024 instead of 1000 bytes/kilobyte
- * `display_byte_suffix`: show 'B' after unit (e.g., 'MB' vs 'M')*/
+/// Convert bytes into human-readable string format
+///
+/// `si_units`: use 1024 instead of 1000 bytes/kilobyte
+/// `display_byte_suffix`: show 'B' after unit (e.g., 'MB' vs 'M')
 fn humanize_bytes(num: f64, si_units: bool, display_byte_suffix: bool) -> Result<String> {
     let negative = if num.is_sign_positive() { "" } else { "-" };
     let num = num.abs();
@@ -52,32 +52,32 @@ fn get_memory() -> Result<MemStats> {
     let sys = System::new();
     let mem = sys.memory()?;
     let meminfo = mem.platform_memory.meminfo;
-    let mem_total = mem.total.as_usize();
+    let mem_total = mem.total.as_u64() as usize;
     let shmem = meminfo
         .get("Shmem")
         .cloned()
         .unwrap_or_else(|| ByteSize::b(0))
-        .as_usize();
+        .as_u64() as usize;
     let mem_free = meminfo
         .get("MemFree")
         .cloned()
         .unwrap_or_else(|| ByteSize::b(0))
-        .as_usize();
+        .as_u64() as usize;
     let buffers = meminfo
         .get("Buffers")
         .cloned()
         .unwrap_or_else(|| ByteSize::b(0))
-        .as_usize();
+        .as_u64() as usize;
     let cached = meminfo
         .get("Cached")
         .cloned()
         .unwrap_or_else(|| ByteSize::b(0))
-        .as_usize();
+        .as_u64() as usize;
     let s_reclaimable = meminfo
         .get("SReclaimable")
         .cloned()
         .unwrap_or_else(|| ByteSize::b(0))
-        .as_usize();
+        .as_u64() as usize;
 
     let mem_used = mem_total - mem_free + shmem - buffers - cached - s_reclaimable;
 
@@ -116,6 +116,7 @@ pub fn main(args: &[String]) -> Result {
     let mut opts = Options::new();
     opts.optflag("h", "help", "print this help menu");
     opts.optflag("p", "percent", "used mem as pct of total mem");
+    opts.optflag("u", "used", "show used memory only");
 
     let matches = opts.parse(&args[1..])?;
 
@@ -126,6 +127,8 @@ pub fn main(args: &[String]) -> Result {
 
     let used_pct = matches.opt_present("p");
     debug!("Opt: Used mem as pct: {}", used_pct);
+    let used_only = matches.opt_present("u");
+    debug!("Opt: Used mem only: {}", used_only);
 
     let stats = get_memory()?;
 
@@ -135,12 +138,19 @@ pub fn main(args: &[String]) -> Result {
         (stats.used as f32 / stats.total as f32) * 100.0
     );
 
+    // Write output
     if used_pct {
         println!("{:.1}%", (stats.used as f32 / stats.total as f32) * 100.0);
         return Ok(());
     }
 
     let used_fmt = humanize_bytes(stats.used as f64, true, false)?;
+
+    if used_only {
+        println!("{}", used_fmt);
+        return Ok(());
+    }
+
     let total_fmt = humanize_bytes(stats.total as f64, true, false)?;
 
     println!("{}/{}", used_fmt, total_fmt);

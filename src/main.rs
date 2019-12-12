@@ -49,7 +49,7 @@ fn main() -> Result {
     let args: Vec<String> = if std::env::args().len() > 1 {
         std::env::args().collect()
     } else {
-        vec!["sysinfo"].iter().map(|s| s.to_string()).collect()
+        vec!["sysinfo"].iter().map(|s| (*s).to_string()).collect()
     };
     let program = args[0].clone();
 

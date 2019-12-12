@@ -1,5 +1,4 @@
-use std::thread;
-use std::time::Duration;
+use std::{thread, time::Duration};
 use systemstat::{Platform, System};
 
 pub fn run_all(measure_cpu: bool) {
@@ -73,9 +72,9 @@ pub fn run_all(measure_cpu: bool) {
     match sys.memory() {
         Ok(mem) => println!(
             "\nMemory: {} used / {} ({} bytes) total \n{:#?}",
-            mem.total - mem.free,
+            mem.total.as_u64() - mem.free.as_u64(),
             mem.total,
-            mem.total.as_usize(),
+            mem.total.as_u64(),
             mem.platform_memory
         ),
         Err(x) => println!("\nMemory: error: {}", x),

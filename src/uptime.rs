@@ -63,11 +63,12 @@ pub fn main(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         write!(cout, "{}h", hours)?;
     }
     // push minutes if < 1 hour OR if --precise and < 1 day
-    if duration.num_days() < 1 || (duration.num_days() == 0 && matches.opt_present("precise")) {
+    if duration.num_days() < 1 && matches.opt_present("precise") {
         let minutes = duration
             .sub(chrono::Duration::hours(duration.num_hours()))
             .num_minutes();
         write!(cout, "{}m", minutes)?;
     }
+    writeln!(cout)?;
     Ok(())
 }

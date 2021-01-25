@@ -14,4 +14,4 @@ chrono = "0.4"
 env_logger = "0.6.2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-sys-info = "0.5"
+sys-info = "0.8"

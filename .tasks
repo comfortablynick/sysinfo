@@ -1,0 +1,87 @@
+; vim:set fenc=utf-8 ft=dosini:
+; written with just2tasks
+
+; build release binary
+[build]
+command=just build
+cwd=<root>
+output=terminal
+pos=tmux_split
+save=1
+
+; alias for `build`
+[b]
+command=just b
+cwd=<root>
+output=terminal
+pos=tmux_split
+save=1
+
+[fix]
+command=just fix
+cwd=<root>
+output=terminal
+pos=tmux_split
+save=1
+
+[help]
+command=just help
+cwd=<root>
+output=terminal
+pos=tmux_split
+save=1
+
+; alias for `help`
+[h]
+command=just h
+cwd=<root>
+output=terminal
+pos=tmux_split
+save=1
+
+; build release binary ONLY during dev; otherwise install
+[install]
+command=just install
+cwd=<root>
+output=terminal
+pos=tmux_split
+save=1
+
+; alias for `install`
+[i]
+command=just i
+cwd=<root>
+output=terminal
+pos=tmux_split
+save=1
+
+; run release binary
+[rb]
+command=just rb
+cwd=<root>
+output=terminal
+pos=tmux_split
+save=1
+
+; build release binary and run
+[file-run]
+command=just run
+cwd=<root>
+output=terminal
+pos=tmux_split
+save=1
+
+; alias for `run`
+[r]
+command=just r
+cwd=<root>
+output=terminal
+pos=tmux_split
+save=1
+
+[test]
+command=just test
+cwd=<root>
+output=terminal
+pos=tmux_split
+save=1

@@ -1,6 +1,6 @@
 /* Output memory usage info */
 use getopts::Options;
-use log::{debug, trace};
+use log::debug;
 use std::cmp;
 
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
@@ -101,7 +101,7 @@ fn get_memory() -> Result<MemStats> {
 }
 
 #[cfg(target_os = "macos")]
-fn get_memory() -> Result<MemStats, Box<std::error::Error>> {
+fn get_memory() -> Result<MemStats> {
     let mem_info = sys_info::mem_info()?;
     debug!("{:#?}", mem_info);
     Ok(MemStats::new(
